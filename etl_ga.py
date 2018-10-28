@@ -122,12 +122,12 @@ def develop_json_fields(df=None):
 
 def main(nrows=None):
     # Convert train
-    train = pd.read_csv('/Users/naidubuddha/Documents/Naidu/Projects/kaggle/ga/data/train.csv', dtype='object', nrows=nrows, encoding='utf-8')
+    train = pd.read_csv('./data/train.csv', dtype='object', nrows=nrows, encoding='utf-8')
     train = develop_json_fields(df=train)
     logger.info('Train done')
 
     # Convert test
-    test = pd.read_csv('/Users/naidubuddha/Documents/Naidu/Projects/kaggle/ga/data/test.csv', dtype='object', nrows=nrows, encoding='utf-8')
+    test = pd.read_csv('./data/test.csv', dtype='object', nrows=nrows, encoding='utf-8')
     test = develop_json_fields(df=test)
     logger.info('Test done')
 
@@ -171,8 +171,8 @@ def main(nrows=None):
             train[f] = train[f].apply(lambda x: try_encode(x))
             test[f] = test[f].apply(lambda x: try_encode(x))
 
-    test.to_csv('/Users/naidubuddha/Documents/Naidu/Projects/kaggle/ga/data/extracted_fields_test.gz', compression='gzip', index=False)
-    train.to_csv('/Users/naidubuddha/Documents/Naidu/Projects/kaggle/ga/data/extracted_fields_train.gz', compression='gzip', index=False)
+    test.to_csv('./data/extracted_fields_test.gz', compression='gzip', index=False)
+    train.to_csv('./data/extracted_fields_train.gz', compression='gzip', index=False)
 
 
 def try_encode(x):
