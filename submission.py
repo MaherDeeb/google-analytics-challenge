@@ -31,9 +31,11 @@ def submit_to_kaggle(path = './data/', pred_file = 'predict.csv' ):
     output:
         nothing
     '''
+    print("Starting... Please wait")
     pred = pd.read_csv(''.join((path,pred_file)))
     pred_to_sub = aggregate_pred(pred)
     pred_to_sub.to_csv(path + '{}_submit.csv'.format(str(round(time.mktime((datetime.datetime.now().timetuple()))))))
+    print("Done!!")
     
 if __name__ == '__main__':
     
