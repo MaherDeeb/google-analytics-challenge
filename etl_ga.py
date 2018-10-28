@@ -106,73 +106,33 @@ def develop_json_fields(df=None):
             func=convert_to_dict,
             n_jobs=4
         )
-        logger.info('{} converted to dict'.format(json_field))
-        #         df[json_field] = df[json_field].apply(lambda x: eval(x
-        #                                             .replace('false', 'False')
-        #                                             .replace('true', 'True')
-        #                                             .replace('null', 'np.nan')))
+
         for k in the_keys:
             # print('Extracting {}'.format(k))
             df[json_field + '.' + k] = df[json_field].apply(lambda x: get_dict_field(x_=x, key_=k))
         del df[json_field]
         gc.collect()
-        logger.info('{} fields extracted'.format(json_field))
     return df
 
 
 def main(nrows=None):
     # Convert train
-    train = pd.read_csv('./data/train.csv', dtype='object', nrows=nrows, encoding='utf-8')
+    train = pd.read_csv('./data/train.csv', dtype='object', nrows=None, encoding='utf-8')
     train = develop_json_fields(df=train)
-    logger.info('Train done')
+    print('Train Done.')
 
     # Convert test
-    test = pd.read_csv('./data/test.csv', dtype='object', nrows=nrows, encoding='utf-8')
+    test = pd.read_csv('./data/test.csv', dtype='object', nrows=None, encoding='utf-8')
     test = develop_json_fields(df=test)
-    logger.info('Test done')
-
-    # Check features validity
-    for f in train.columns:
-        if f not in ['date', 'fullVisitorId', 'sessionId']:
-            try:
-                train[f] = train[f].astype(np.float64)
-                test[f] = test[f].astype(np.float64)
-            except (ValueError, TypeError):
-                logger.info('{} is a genuine string field'.format(f))
-                pass
-            except Exception:
-                logger.exception('{} enountered an exception'.format(f))
-                raise
-
-    logger.info('{}'.format(train['totals.transactionRevenue'].sum()))
-    feature_to_drop = []
-    for f in train.columns:
-        if f not in ['date', 'fullVisitorId', 'sessionId', 'totals.transactionRevenue']:
-            if train[f].dtype == 'object':
-                try:
-                    trn, _ = pd.factorize(train[f])
-                    tst, _ = pd.factorize(test[f])
-                    if (np.std(trn) == 0) | (np.std(tst) == 0):
-                        feature_to_drop.append(f)
-                        logger.info('No variation in {}'.format(f))
-                except TypeError:
-                    feature_to_drop.append(f)
-                    logger.info('TypeError exception for {}'.format(f))
-            else:
-                if (np.std(train[f].fillna(0).values) == 0) | (np.std(test[f].fillna(0).values) == 0):
-                    feature_to_drop.append(f)
-                    logger.info('No variation in {}'.format(f))
-    test.drop(feature_to_drop, axis=1, inplace=True)
-    train.drop(feature_to_drop, axis=1, inplace=True)
-    logger.info('{}'.format(train['totals.transactionRevenue'].sum()))
+    print('Test Done.')
 
     for f in train.columns:
         if train[f].dtype == 'object':
             train[f] = train[f].apply(lambda x: try_encode(x))
             test[f] = test[f].apply(lambda x: try_encode(x))
 
-    test.to_csv('./data/extracted_fields_test.gz', compression='gzip', index=False)
-    train.to_csv('./data/extracted_fields_train.gz', compression='gzip', index=False)
+    test.to_csv('./data/extracted_fields_test.csv')
+    train.to_csv('./data/extracted_fields_train.csv')
 
 
 def try_encode(x):
@@ -184,31 +144,12 @@ def try_encode(x):
     except UnicodeEncodeError:
         return np.nan
 
-
-def get_logger():
-    logger_ = logging.getLogger('main')
-    logger_.setLevel(logging.DEBUG)
-    fh = logging.FileHandler('logging.log')
-    fh.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('[%(levelname)s]%(asctime)s:%(name)s:%(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    # add the handlers to the logger
-    logger_.addHandler(fh)
-    logger_.addHandler(ch)
-
-    return logger_
-
-
 if __name__ == '__main__':
-    logger = get_logger()
     try:
-        warnings.simplefilter('error', SettingWithCopyWarning)
-        gc.enable()
-        logger.info('Process started')
+        print('Process Started.')
         main(nrows=None)
+        print('Process Ended.')
     except Exception as err:
         logger.exception('Exception occured')
         raise
+
