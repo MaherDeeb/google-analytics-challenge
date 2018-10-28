@@ -16,6 +16,6 @@ sys framework  <br />
 2. If you saved the 'non-aggregated prediction' csv under the path './data' and under the name predict.csv, you can run the script in the terminal as follows: <br />
 `python submission.py` <br />
 3. If you saved the 'non-aggregated prediction' csv somewhere else than the path './data', for example './data/pred/',  but still under the name predict.csv, you can run the script in the terminal as follows: <br />
-`python submission.py './data/pred/' <br />
+`python submission.py './data/pred/'` <br />
 4. If you saved the 'non-aggregated prediction' csv somewhere else than the path './data', for example './data/pred/',  and under another name than predict.csv, for example 'mypred.csv', you can run the script in the terminal as follows:<br />
 `python submission.py './data/pred/' 'mypred.csv'`
