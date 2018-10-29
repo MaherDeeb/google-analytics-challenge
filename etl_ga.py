@@ -33,6 +33,21 @@ def load_df(csv_path, nrows):
 train_df = load_df(train_csv, nrows)
 test_df = load_df(test_csv, nrows)
 
+def clean_column_names(df):
+    columns = df.columns
+    column_corr = []
+    for column in columns:
+        if '.' in column:
+            column_corr.append(column.split('.')[-1])
+        else:
+            column_corr.append(column)
+    df.columns = column_corr
+    return df,column_corr,list(columns)
+
+train_df,column_corr,columns = clean_column_names(train_df)
+test_df,column_corr,columns = clean_column_names(test_df)
+
+print(list(columns))
 print('Writing to CSV .....')
 test_df.to_csv('./data/test_expanded.csv')
 train_df.to_csv('./data/train_expanded.csv')
