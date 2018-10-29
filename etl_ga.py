@@ -1,155 +1,52 @@
-import pandas as pd
+import os
+import json
 import numpy as np
-import gc
-from pandas.core.common import SettingWithCopyWarning
-import warnings
-from multiprocessing import Pool as Pool
-import functools
-import logging
+import pandas as pd
+from pandas.io.json import json_normalize
+import matplotlib.pyplot as plt
+import seaborn as sns
+color = sns.color_palette()
 
+%matplotlib inline
 
-def get_keys_for_field(field=None):
-    the_dict = {
-        'device': [
-            'browser',
-            'browserSize',
-            'browserVersion',
-            'deviceCategory',
-            'flashVersion',
-            'isMobile',
-            'language',
-            'mobileDeviceBranding',
-            'mobileDeviceInfo',
-            'mobileDeviceMarketingName',
-            'mobileDeviceModel',
-            'mobileInputSelector',
-            'operatingSystem',
-            'operatingSystemVersion',
-            'screenColors',
-            'screenResolution'
-        ],
-        'geoNetwork': [
-            'city',
-            'cityId',
-            'continent',
-            'country',
-            'latitude',
-            'longitude',
-            'metro',
-            'networkDomain',
-            'networkLocation',
-            'region',
-            'subContinent'
-        ],
-        'totals': [
-            'bounces',
-            'hits',
-            'newVisits',
-            'pageviews',
-            'transactionRevenue',
-            'visits'
-        ],
-        'trafficSource': [
-            'adContent',
-            'adwordsClickInfo',
-            'campaign',
-            'campaignCode',
-            'isTrueDirect',
-            'keyword',
-            'medium',
-            'referralPath',
-            'source'
-        ],
-    }
+from plotly import tools
+import plotly.offline as py
+py.init_notebook_mode(connected=True)
+import plotly.graph_objs as go
 
-    return the_dict[field]
+from sklearn import model_selection, preprocessing, metrics
+import lightgbm as lgb
 
+pd.options.mode.chained_assignment = None
+pd.options.display.max_columns = 999
 
-def apply_func_on_series(data=None, func=None):
-    return data.apply(lambda x: func(x))
+train_csv = './data/train.csv'
+test_csv = './data/test.csv'
+nrows = None
 
-
-def multi_apply_func_on_series(df=None, func=None, n_jobs=4):
-    p = Pool(n_jobs)
-    f_ = p.map(functools.partial(apply_func_on_series, func=func),
-               np.array_split(df, n_jobs))
-    f_ = pd.concat(f_, axis=0, ignore_index=True)
-    p.close()
-    p.join()
-    return f_.values
-
-
-def convert_to_dict(x):
-    return eval(x.replace('false', 'False')
-                .replace('true', 'True')
-                .replace('null', 'np.nan'))
-
-
-def get_dict_field(x_, key_):
-    try:
-        return x_[key_]
-    except KeyError:
-        return np.nan
-
-
-def develop_json_fields(df=None):
-    json_fields = ['device', 'geoNetwork', 'totals', 'trafficSource']
-    # Get the keys
-    for json_field in json_fields:
-        # print('Doing Field {}'.format(json_field))
-        # Get json field keys to create columns
-        the_keys = get_keys_for_field(json_field)
-        # Replace the string by a dict
-        # print('Transform string to dict')
-        df[json_field] = multi_apply_func_on_series(
-            df=df[json_field],
-            func=convert_to_dict,
-            n_jobs=4
-        )
-
-        for k in the_keys:
-            # print('Extracting {}'.format(k))
-            df[json_field + '.' + k] = df[json_field].apply(lambda x: get_dict_field(x_=x, key_=k))
-        del df[json_field]
-        gc.collect()
+def load_df(csv_path, nrows):
+    JSON_COLUMNS = ['device', 'geoNetwork', 'totals', 'trafficSource']
+    
+    print(f'Processing {csv_path}')
+    
+    df = pd.read_csv(csv_path, 
+                     converters={column: json.loads for column in JSON_COLUMNS}, 
+                     dtype={'fullVisitorId': 'str'}, # Important!!
+                     nrows=nrows)
+    
+    for column in JSON_COLUMNS:
+        column_as_df = json_normalize(df[column])
+        column_as_df.columns = [f"{column}.{subcolumn}" for subcolumn in column_as_df.columns]
+        df = df.drop(column, axis=1).merge(column_as_df, right_index=True, left_index=True)
+    print(f"Loaded {os.path.basename(csv_path)}. Shape: {df.shape}")
     return df
 
 
-def main(nrows=None):
-    # Convert train
-    train = pd.read_csv('./data/train.csv', dtype='object', nrows=None, encoding='utf-8')
-    train = develop_json_fields(df=train)
-    print('Train Done.')
+%%time
+train_df = load_df(train_csv, nrows)
+test_df = load_df(test_csv, nrows)
 
-    # Convert test
-    test = pd.read_csv('./data/test.csv', dtype='object', nrows=None, encoding='utf-8')
-    test = develop_json_fields(df=test)
-    print('Test Done.')
-
-    for f in train.columns:
-        if train[f].dtype == 'object':
-            train[f] = train[f].apply(lambda x: try_encode(x))
-            test[f] = test[f].apply(lambda x: try_encode(x))
-
-    test.to_csv('./data/extracted_fields_test.csv')
-    train.to_csv('./data/extracted_fields_train.csv')
-
-
-def try_encode(x):
-    """Used to remove any encoding issues within the data"""
-    try:
-        return x.encode('utf-8', 'surrogateescape').decode('utf-8')
-    except AttributeError:
-        return np.nan
-    except UnicodeEncodeError:
-        return np.nan
-
-if __name__ == '__main__':
-    try:
-        print('Process Started.')
-        main(nrows=None)
-        print('Process Ended.')
-    except Exception as err:
-        logger.exception('Exception occured')
-        raise
-
+print('Writing to CSV .....')
+test_df.to_csv('./data/n_extracted_fields_test.csv')
+train_df.to_csv('./data/n_extracted_fields_train.csv')
+print('Done')
