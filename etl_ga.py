@@ -1,28 +1,14 @@
 import os
 import json
-import numpy as np
 import pandas as pd
 from pandas.io.json import json_normalize
-import matplotlib.pyplot as plt
-import seaborn as sns
-color = sns.color_palette()
-
-#%matplotlib inline
-
-
-from plotly import tools
-import plotly.offline as py
-py.init_notebook_mode(connected=True)
-import plotly.graph_objs as go
-
-from sklearn import model_selection, preprocessing, metrics
-import lightgbm as lgb
 
 pd.options.mode.chained_assignment = None
 pd.options.display.max_columns = 999
 
 train_csv = './data/train.csv'
 test_csv = './data/test.csv'
+
 nrows = None
 
 def load_df(csv_path, nrows):
