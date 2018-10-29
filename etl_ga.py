@@ -26,14 +26,14 @@ nrows = None
 
 def load_df(csv_path, nrows):
     JSON_COLUMNS = ['device', 'geoNetwork', 'totals', 'trafficSource']
-    
+
     print(f'Processing {csv_path}')
     
-    df = pd.read_csv(csv_path, 
-                     converters={column: json.loads for column in JSON_COLUMNS}, 
+    df = pd.read_csv(csv_path,
+                     converters={column: json.loads for column in JSON_COLUMNS},
                      dtype={'fullVisitorId': 'str'}, # Important!!
                      nrows=nrows)
-    
+
     for column in JSON_COLUMNS:
         column_as_df = json_normalize(df[column])
         column_as_df.columns = [f"{column}.{subcolumn}" for subcolumn in column_as_df.columns]
@@ -47,6 +47,6 @@ train_df = load_df(train_csv, nrows)
 test_df = load_df(test_csv, nrows)
 
 print('Writing to CSV .....')
-test_df.to_csv('./data/n_extracted_fields_test.csv')
-train_df.to_csv('./data/n_extracted_fields_train.csv')
+test_df.to_csv('./data/extracted_fields_test.csv')
+train_df.to_csv('./data/extracted_fields_train.csv')
 print('Done')
