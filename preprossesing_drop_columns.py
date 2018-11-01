@@ -6,7 +6,7 @@ Created on Sun Oct 28 19:57:39 2018
 """
 import pandas as pd
 
-data_path = '../'
+data_path = './data/'
 
 df_train = pd.read_csv('{}train_expanded.csv'.format(data_path), engine='python')
 df_test = pd.read_csv('{}test_expanded.csv'.format(data_path), engine='python')

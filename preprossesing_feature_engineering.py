@@ -8,7 +8,7 @@ Created on Sun Oct 28 20:11:49 2018
 import pandas as pd
 from datetime import datetime
 
-data_path = '../'
+data_path = './data/'
 
 df_train = pd.read_csv('{}train_clean.csv'.format(data_path), engine='python')
 df_test = pd.read_csv('{}test_clean.csv'.format(data_path), engine='python')
@@ -104,8 +104,8 @@ for column in columns:
 df_train = new_features(df_train)
 df_test = new_features(df_test)
 
-df_train.to_csv('{}train_one_hot.csv'.format(data_path),index = False)
-df_test.to_csv('{}test_one_hot.csv'.format(data_path),index = False)
+df_train.to_csv('{}train_feature_engineering.csv'.format(data_path),index = False)
+df_test.to_csv('{}test_feature_engineering.csv'.format(data_path),index = False)
     
     
     

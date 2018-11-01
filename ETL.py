@@ -9,7 +9,7 @@ import pandas as pd
 import json 
 
 
-data_path = '../'
+data_path = './data/'
 
 def separate_json(series: pd.Series) -> pd.DataFrame():
     """

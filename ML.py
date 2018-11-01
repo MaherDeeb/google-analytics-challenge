@@ -10,7 +10,7 @@ import lightgbm as lgb
 import pandas as pd
 import numpy as np
 import itertools as it
-data_path = '../'
+data_path = './data/'
 
 df_train = pd.read_csv('{}train_one_hot.csv'.format(data_path), engine='python')
 df_test = pd.read_csv('{}test_one_hot.csv'.format(data_path), engine='python')
@@ -57,7 +57,7 @@ def map_features(X, map_degree,maped_fea):
     cor_f=pd.DataFrame(maped_fea)
     com_x_f=[]
     for i in range(2,map_degree+1):
-        com_x=list(it.combinations_with_replacement(range(35,60), i))#(range(n_x), i))
+        com_x=list(it.combinations_with_replacement(range(60,80), i))#(range(n_x), i))
         for j in range(len(com_x)):
             if com_x[j][0]!=com_x[j][1] or com_x[j][0]!=com_x[j][1]:
                 V[:,0]= X[:,com_x[j][0]]*X[:,com_x[j][1]]
