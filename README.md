@@ -9,13 +9,17 @@ pandas framework  <br />
 datetime framework  <br />
 time framework  <br />
 sys framework  <br />
+itertools <br />
+lightgbm framework (https://pypi.org/project/lightgbm/) <br />
 
 ### How does it work:
 
-1. you need to save the 'non-aggregated prediction' csv file somewhere on your local. The predictions should contain 804684 rows <br />
-2. If you saved the 'non-aggregated prediction' csv under the path './data' and under the name predict.csv, you can run the script in the terminal as follows: <br />
-`python submission.py` <br />
-3. If you saved the 'non-aggregated prediction' csv somewhere else than the path './data', for example './data/pred/',  but still under the name predict.csv, you can run the script in the terminal as follows: <br />
-`python submission.py './data/pred/'` <br />
-4. If you saved the 'non-aggregated prediction' csv somewhere else than the path './data', for example './data/pred/',  and under another name than predict.csv, for example 'mypred.csv', you can run the script in the terminal as follows:<br />
-`python submission.py './data/pred/' 'mypred.csv'`
+Run the pipeline in following order <br />
+`python ETL.py`<br />
+`python preprossesing_drop_columns.py`<br />
+`preprossesing_feature_engineering.py`<br />
+`ML.py`<br />
+`submission.py`<br />
+
+The running time can take little bit time!!
+
