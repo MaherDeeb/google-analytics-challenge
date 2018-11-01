@@ -17,9 +17,9 @@ lightgbm framework (https://pypi.org/project/lightgbm/) <br />
 Run the pipeline in following order <br />
 `python ETL.py`<br />
 `python preprossesing_drop_columns.py`<br />
-`preprossesing_feature_engineering.py`<br />
-`ML.py`<br />
-`submission.py`<br />
+`python preprossesing_feature_engineering.py`<br />
+`python ML.py`<br />
+`python submission.py`<br />
 
 The running time can take little bit time!!
 
