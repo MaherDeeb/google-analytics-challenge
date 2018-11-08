@@ -7,6 +7,7 @@ Created on Sun Oct 28 20:11:49 2018
 
 import pandas as pd
 from datetime import datetime
+import re
 
 data_path = './data/'
 
@@ -86,6 +87,13 @@ def new_features(df):
     
     df['adContent_na'] = (df['adContent'].isnull())*1
     df['adContent_google'] =(df['adContent'].str.contains('Google'))*1
+    
+    df['gcdID_5_last'] =df['gclId'].map(lambda x: str(x)[-5:-1] if len(str(x))>3 else None)
+    
+    df['google'] = df['keyword'].map(lambda x: (re.match(r'.*go+gle.*', str(x).lower()) is not None)*1)
+    df['youtube'] =df['keyword'].map(lambda x: (re.match(r'.*youtube.*', str(x).lower()) is not None)*1)
+    df['store']= df['keyword'].map(lambda x: (re.match(r'.*store.*', str(x).lower()) is not None)*1)
+    df['keywords_notprovided']= df['keyword'].map(lambda x: (re.match(r'.*(not provided).*', str(x).lower()) is not None)*1)+(df['keyword'].isnull())*1
     
     return df
 

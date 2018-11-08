@@ -21,8 +21,8 @@ Y_train = df_train.transactionRevenue
 df_train = df_train.drop(['transactionRevenue'],axis = 1)
 Y_train = Y_train.fillna(0).astype('int64')
 fullVisitorId_test = df_test.fullVisitorId
-#df_train = df_train.drop(['fullVisitorId'],axis = 1)
-#df_test = df_test.drop(['fullVisitorId'],axis = 1)
+df_train = df_train.drop(['fullVisitorId'],axis = 1)
+df_test = df_test.drop(['fullVisitorId'],axis = 1)
     
 # =============================================================================
 # except:
@@ -90,9 +90,8 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
               "num_leaves" : 31, "learning_rate" : 0.03, 
-              "bagging_fraction" : 0.75, "feature_fraction" : 0.8, "bagging_frequency" : 9,
-              'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 5000,'scale_pos_weight': 2,
-        'drop_rate': 0.02,'min_data_in_leaf': 30}
+              "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
+              'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 1000,'min_data_in_leaf': 30}
 
 lgb_train = lgb.Dataset(x_train_map, label=np.log1p(y_train.reshape(len(y_train))))
 lgb_val = lgb.Dataset(x_cv_map, label=np.log1p(y_cv.reshape(len(y_cv))))
