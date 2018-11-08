@@ -57,7 +57,7 @@ def map_features(X, map_degree,maped_fea):
     cor_f=pd.DataFrame(maped_fea)
     com_x_f=[]
     for i in range(2,map_degree+1):
-        com_x=list(it.combinations_with_replacement(range(0,1), i))#(range(n_x), i))
+        com_x=list(it.combinations_with_replacement(range(120,135), i))#(range(n_x), i))
         for j in range(len(com_x)):
             if com_x[j][0]!=com_x[j][1] or com_x[j][0]!=com_x[j][1]:
                 V[:,0]= X[:,com_x[j][0]]*X[:,com_x[j][1]]
@@ -89,7 +89,7 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 #df_test = (df_test - np.mean(x_train))/np.std(x_train)
 
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
-              "num_leaves" : 31, "learning_rate" : 0.03, 
+              "num_leaves" : 60, "learning_rate" : 0.05, 
               "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
               'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 1000,'min_data_in_leaf': 30}
 
