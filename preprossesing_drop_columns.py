@@ -11,23 +11,21 @@ data_path = './data/'
 df_train = pd.read_csv('{}train_expanded.csv'.format(data_path), engine='python')
 df_test = pd.read_csv('{}test_expanded.csv'.format(data_path), engine='python')
 
-expected_column_to_detet=['socialEngagementType','browserSize','browserVersion','flashVersion',
-                         'language','mobileDeviceBranding','mobileDeviceInfo','mobileDeviceMarketingName',
-                         'mobileDeviceModel','mobileInputSelector','operatingSystemVersion','screenColors',
-                          'screenResolution','cityId','latitude','longitude','networkLocation','visits',
-                          'campaignCode','criteriaParameters','targetingCriteria']
 
-def drop_unnecessary_columns(expected_column_to_detet,df_train,df_test):
-    for col in expected_column_to_detet:
-        df_train = df_train.drop([col],axis = 1)
-    for col in expected_column_to_detet:
-        try:
-            df_test = df_test.drop([col],axis = 1)
-        except:
-            print('Column {} is not exiting in the test dataset'.format(col))
+def drop_unnecessary_columns(df_train,df_test):
+    const_cols_train = [c for c in df_train.columns
+              if df_train[c].nunique(dropna=False)==1 ]
+    const_cols_test = [c for c in df_test.columns 
+                     if df_test[c].nunique(dropna=False)==1 ]
+
+    # Drop the columns with constant values
+    df_train = df_train.drop(const_cols_train,
+                                         axis=1, inplace=False)
+    df_test = df_test.drop(const_cols_test,
+                                       axis=1, inplace=False)
     return df_train, df_test
 
-df_train, df_test = drop_unnecessary_columns(expected_column_to_detet,df_train,df_test)
+df_train, df_test = drop_unnecessary_columns(df_train,df_test)
 
 df_train.to_csv('{}train_clean.csv'.format(data_path),index = False)
 df_test.to_csv('{}test_clean.csv'.format(data_path),index = False)

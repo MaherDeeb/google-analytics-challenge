@@ -17,8 +17,13 @@ df_test = pd.read_csv('{}test_feature_engineering.csv'.format(data_path), engine
 
 
 
-Y_train = df_train.transactionRevenue
-df_train = df_train.drop(['transactionRevenue'],axis = 1)
+Y_train = df_train['totals.transactionRevenue']
+Y_test = df_test['totals.transactionRevenue']
+df_train = df_train.drop(['trafficSource.campaignCode'],axis = 1)
+
+df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
+df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
+
 Y_train = Y_train.fillna(0).astype('int64')
 fullVisitorId_test = df_test.fullVisitorId
 df_train = df_train.drop(['fullVisitorId'],axis = 1)

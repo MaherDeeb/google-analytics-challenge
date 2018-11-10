@@ -8,7 +8,21 @@ Created on Sun Oct 28 19:52:40 2018
 import pandas as pd
 import json 
 
+import sys
+import csv
+maxInt = sys.maxsize
+decrement = True
 
+while decrement:
+    # decrease the maxInt value by factor 10 
+    # as long as the OverflowError occurs.
+
+    decrement = False
+    try:
+        csv.field_size_limit(maxInt)
+    except OverflowError:
+        maxInt = int(maxInt/10)
+        decrement = True
 data_path = './data/'
 
 def separate_json(series: pd.Series) -> pd.DataFrame():
@@ -36,7 +50,7 @@ def apply_sepration(df_org):
             df_org[col_name]=df_org[col_name].\
             map(lambda x: {'index':'None'} if x is None else x)
 
-        df = separate_json(df_train[col_name])
+        df = separate_json(df_org[col_name])
         df.columns = ['{}.{}'.format(col_name,x) for x in list(df.columns)]
     
         df_org = df_org.join(df)
