@@ -114,3 +114,6 @@ df_test = new_features(df_test)
 
 df_train.to_csv('{}train_feature_engineering.csv'.format(data_path),index = False)
 df_test.to_csv('{}test_feature_engineering.csv'.format(data_path),index = False)
+
+print(len(df_train.groupby(['fullVisitorId']).sum()))
+print(len(df_test.groupby(['fullVisitorId']).sum()))

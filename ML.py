@@ -12,14 +12,13 @@ import numpy as np
 import itertools as it
 data_path = './data/'
 
-df_train = pd.read_csv('{}train_feature_engineering.csv'.format(data_path), engine='python')
-df_test = pd.read_csv('{}test_feature_engineering.csv'.format(data_path), engine='python')
+df_train = pd.read_csv('{}train_feature_engineering.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
+df_test = pd.read_csv('{}test_feature_engineering.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 
 
 
 Y_train = df_train['totals.transactionRevenue']
 Y_test = df_test['totals.transactionRevenue']
-df_train = df_train.drop(['trafficSource.campaignCode'],axis = 1)
 
 df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
 df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
@@ -110,3 +109,6 @@ pred_sub.loc[x,'PredictedLogRevenue']=0
 pred_sub.columns=['fullVisitorId','PredictedLogRevenue']
 
 pred_sub.to_csv(data_path+'predict.csv',index=False)
+
+print(len(df_train.groupby(['fullVisitorId']).sum()))
+print(len(df_test.groupby(['fullVisitorId']).sum()))

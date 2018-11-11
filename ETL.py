@@ -59,18 +59,21 @@ def apply_sepration(df_org):
     return df_org
 
 nest_json_col = ['hits']
-df_train = pd.read_csv('{}train_v2.csv'.format(data_path) ,nrows=20000,engine='python')
+df_train = pd.read_csv('{}train_v2.csv'.format(data_path) ,nrows=2000,engine='python',dtype={'fullVisitorId': 'object'})
 df_train = df_train.drop('hits',axis=1)
 df_train ['customDimensions']= df_train['customDimensions'].map(lambda x: str(x).replace("\'", "\""))
 
 df_train = apply_sepration(df_train)
 #df_train.columns
 
-df_test = pd.read_csv('{}test_v2.csv'.format(data_path),nrows=20000,engine='python')
+df_test = pd.read_csv('{}test_v2.csv'.format(data_path),nrows=2000,engine='python',dtype={'fullVisitorId': 'object'})
 df_test ['customDimensions']= df_test['customDimensions'].map(lambda x: str(x).replace("\'", "\""))
 df_test = df_test.drop('hits',axis=1)
 
 df_test = apply_sepration(df_test)
+
+print(len(df_train.groupby(['fullVisitorId']).sum()))
+print(len(df_test.groupby(['fullVisitorId']).sum()))
 
 df_train.to_csv('{}train_expanded.csv'.format(data_path),index = False)
 df_test.to_csv('{}test_expanded.csv'.format(data_path),index = False)
