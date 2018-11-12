@@ -95,7 +95,7 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
               "num_leaves" : 10, "learning_rate" : 0.01, 
               "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
-              'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 2000,'min_data_in_leaf': 30}
+              'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
 
 lgb_train = lgb.Dataset(x_train_map, label=np.log1p(y_train.reshape(len(y_train))))
 lgb_val = lgb.Dataset(x_cv_map, label=np.log1p(y_cv.reshape(len(y_cv))))
