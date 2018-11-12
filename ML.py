@@ -24,6 +24,8 @@ df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
 df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
 
 Y_train = Y_train.fillna(0).astype('int64')
+Y_test = Y_test.fillna(0).astype('int64')
+
 fullVisitorId_test = df_test.fullVisitorId
 df_train = df_train.drop(['fullVisitorId'],axis = 1)
 df_test = df_test.drop(['fullVisitorId'],axis = 1)
@@ -98,7 +100,7 @@ lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
               'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
 
 lgb_train = lgb.Dataset(x_train_map, label=np.log1p(y_train.reshape(len(y_train))))
-lgb_val = lgb.Dataset(x_cv_map, label=np.log1p(y_cv.reshape(len(y_cv))))
+lgb_val = lgb.Dataset(x_test_map, label=np.log1p(Y_test))
 model = lgb.train(lgb_params, train_set=lgb_train, valid_sets=[lgb_val], verbose_eval=50)
 
 preds = model.predict(df_test, num_iteration=model.best_iteration)
