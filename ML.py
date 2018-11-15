@@ -12,8 +12,8 @@ import numpy as np
 import itertools as it
 data_path = './data/'
 
-df_train = pd.read_csv('{}train_feature_engineering.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
-df_test = pd.read_csv('{}test_feature_engineering.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
+df_train = pd.read_csv('{}train_Localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
+df_test = pd.read_csv('{}test_localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 
 
 
