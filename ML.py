@@ -24,6 +24,10 @@ df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
 df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
 
 Y_train = Y_train.fillna(0).astype('int64')
+Y_test = Y_test.fillna(0).astype('int64')
+
+Y_total = pd.concat([Y_train,Y_test],sort=False)
+
 fullVisitorId_test = df_test.fullVisitorId
 df_train = df_train.drop(['fullVisitorId'],axis = 1)
 df_test = df_test.drop(['fullVisitorId'],axis = 1)
@@ -54,7 +58,7 @@ def replace_strings_integer(df_train, df_test):
     return df_train_decoded, df_test_decoded, df_total
 
 df_train, df_test, df_total = replace_strings_integer(df_train, df_test)
-Y_train_b = (Y_train > 0)*1
+Y_train_b = (Y_total > 0)*1
 
 def map_features(X, map_degree,maped_fea):
     V=np.zeros((len(maped_fea),1))
@@ -81,7 +85,7 @@ def map_features_test(X, com_x_f):
 #df_test = df_test.fillna(0).astype('int64')
 
 random_state = 0
-x_train, x_cv, y_train, y_cv= train_test_split(df_train,np.array(Y_train),
+x_train, x_cv, y_train, y_cv= train_test_split(df_total,np.array(Y_total),
                        test_size=0.1,stratify=Y_train_b,random_state=random_state)
 
 x_train_map,com_x_f=map_features(np.array(x_train),2,y_train)
@@ -93,7 +97,7 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 #df_test = (df_test - np.mean(x_train))/np.std(x_train)
 
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
-              "num_leaves" : 20, "learning_rate" : 0.01, 
+              "num_leaves" : 10, "learning_rate" : 0.01, 
               "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
               'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
 
@@ -110,5 +114,5 @@ pred_sub.columns=['fullVisitorId','PredictedLogRevenue']
 
 pred_sub.to_csv(data_path+'predict.csv',index=False)
 
-print(len(df_train.groupby(['fullVisitorId']).sum()))
-print(len(df_test.groupby(['fullVisitorId']).sum()))
+#print(len(df_train.groupby(['fullVisitorId']).sum()))
+#print(len(df_test.groupby(['fullVisitorId']).sum()))
