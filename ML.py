@@ -51,9 +51,9 @@ def replace_strings_integer(df_train, df_test):
         df_test_decoded[col_i] =  df_total.loc[range(df_train.shape[0],
                                                      df_train.shape[0]+df_test.shape[0]),
                                                col_i].values
-    return df_train_decoded, df_test_decoded
+    return df_train_decoded, df_test_decoded, df_total
 
-df_train, df_test = replace_strings_integer(df_train, df_test)
+df_train, df_test, df_total = replace_strings_integer(df_train, df_test)
 Y_train_b = (Y_train > 0)*1
 
 def map_features(X, map_degree,maped_fea):
@@ -93,7 +93,7 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 #df_test = (df_test - np.mean(x_train))/np.std(x_train)
 
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
-              "num_leaves" : 10, "learning_rate" : 0.01, 
+              "num_leaves" : 20, "learning_rate" : 0.01, 
               "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
               'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
 
