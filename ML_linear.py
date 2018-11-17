@@ -10,6 +10,9 @@ import lightgbm as lgb
 import pandas as pd
 import numpy as np
 import itertools as it
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import MinMaxScaler
+
 data_path = './data/'
 
 df_train = pd.read_csv('{}train_Localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
@@ -55,10 +58,7 @@ def replace_strings_integer(df_train, df_test):
         df_test_decoded[col_i] =  df_total.loc[range(df_train.shape[0],
                                                      df_train.shape[0]+df_test.shape[0]),
                                                col_i].values
-    return df_train_decoded, df_test_decoded, df_total
-
-df_train, df_test, df_total = replace_strings_integer(df_train, df_test)
-Y_train_b = (Y_train > 0)*1
+    return df_train_decoded, df_test_decoded
 
 def map_features(X, map_degree,maped_fea):
     V=np.zeros((len(maped_fea),1))
@@ -80,32 +80,45 @@ def map_features_test(X, com_x_f):
     for j in range(len(com_x)):
         X=np.append(X.T,np.array(X[:,com_x[j][0]]*X[:,com_x[j][1]]).reshape(1,-1),axis=0).T
     return X
-#x_train_map,com_x_f=map_features(np.array(x_train),2,y_train)
-#df_train = df_train.fillna(0).astype('int64')
-#df_test = df_test.fillna(0).astype('int64')
 
+
+def scale_features(df_train, df_test):
+    df_total = pd.concat([df_train,df_test],sort=False)
+    df_total.index=range(len(df_total['date']))
+    df_train_n = df_train
+    df_test_n= df_test
+    
+    scaler = MinMaxScaler()
+    scaler.fit(df_total)
+    df_train_n = scaler.transform(df_train)
+    df_test_n = scaler.transform(df_test)
+
+    return df_train_n, df_test_n
+
+
+df_train, df_test = replace_strings_integer(df_train, df_test)
+Y_train_b = (Y_train > 0)*1
+
+df_train = df_train.fillna(0)
+df_test = df_test.fillna(0)
+
+df_train, df_test = scale_features(df_train, df_test)
 random_state = 0
-x_train, x_cv, y_train, y_cv= train_test_split(df_train,np.array(Y_train),
+x_train, x_cv, y_train, y_cv= train_test_split(df_train,np.array(np.log1p(Y_train)),
                        test_size=0.1,stratify=Y_train_b,random_state=random_state)
 
-x_train_map,com_x_f=map_features(np.array(x_train),2,y_train)
-x_cv_map=map_features_test(np.array(x_cv), com_x_f)
-x_test_map=map_features_test(np.array(df_test), com_x_f)
+#x_train_map,com_x_f=map_features(np.array(x_train),2,y_train)
+#x_cv_map=map_features_test(np.array(x_cv), com_x_f)
+#x_test_map=map_features_test(np.array(df_test), com_x_f)
 
-#x_train_n = (x_train - np.mean(x_train))/np.std(x_train)
-#x_cv = (x_cv - np.mean(x_train))/np.std(x_train)
-#df_test = (df_test - np.mean(x_train))/np.std(x_train)
+linreg = LinearRegression()
+linreg.fit(x_train, y_train)
+print('training data quality')
+print(linreg.score(x_train,y_train))
+print('cross validation data quality')
+print(linreg.score(x_cv,y_cv))
 
-lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
-              "num_leaves" : 10, "learning_rate" : 0.01, 
-              "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
-              'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
-
-lgb_train = lgb.Dataset(x_train_map, label=np.log1p(y_train.reshape(len(y_train))))
-lgb_val = lgb.Dataset(x_cv_map, label=np.log1p(y_cv.reshape(len(y_cv))))
-model = lgb.train(lgb_params, train_set=lgb_train, valid_sets=[lgb_val], verbose_eval=50)
-
-preds = model.predict(df_test, num_iteration=model.best_iteration)
+preds = linreg.predict(df_test)
 pred_sub = pd.DataFrame(fullVisitorId_test)
 pred_sub['PredictedLogRevenue'] = preds
 x =pred_sub[pred_sub.PredictedLogRevenue < 0].index
