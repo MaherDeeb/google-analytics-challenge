@@ -28,6 +28,25 @@ cat("getting data /n")
 
 #getwd()
 #setwd("C:/kaggle/V2/google-analytics-challenge")
+cat("checking work directory... /n")
+
+ifelse(("train_feature_engineering.csv"%in%list.files("./data"))&("test_feature_engineering.csv"%in%list.files("./data")),
+       m<-1,
+       m<-0)
+       
+if(m==0){
+  
+  stop("edit line 44 in this R script:
+       Remove #, and adjust the path according to yours 
+       it should look somehow similar to the one suggested inside the script")
+}
+ 
+#setwd("C:/kaggle/V2/google-analytics-challenge")
+
+
+cat("train and test files found =) ... 
+       ... now loading ... ")
+
 test<-as.data.frame(read_csv("./data/test_feature_engineering.csv"))
 train<-as.data.frame(read_csv("./data/train_feature_engineering.csv"))
 
@@ -35,7 +54,7 @@ train<-as.data.frame(read_csv("./data/train_feature_engineering.csv"))
 # geocoding ... get location ----------------------------------------------
 
 cat("geocoding /n")
-
+gc(T)
 # replace unused location names with NA 
 is_na_val <- function(x) x %in% c("not available in demo dataset", "(not provided)",
                                   "(not set)", "<NA>", "unknown.unknown",  "(none)")
@@ -45,7 +64,7 @@ names(train)
 needed_cols<-c("fullVisitorId","visitStartTime",
                  "geoNetwork.country",
                  "geoNetwork.region",
-               "totals.transactions",
+               "totals.transactionRevenue",
                  "geoNetwork.city")
 
 tr_te<-rbind(train[,needed_cols],test[,needed_cols])
@@ -53,17 +72,17 @@ tr_te<-rbind(train[,needed_cols],test[,needed_cols])
 tr_te<-tr_te%>%
   mutate_all(funs(ifelse(is_na_val(.), NA, .))) 
 
+summary(train$totals.transactionRevenue)
+summary(train$totals.transactions)
+summary(train$totals.totalTransactionRevenue)
 
 #countries with no revenue
-by_Land<-tr_te[,c("geoNetwork.country","totals.transactions")]%>%
+by_Land<-tr_te[,c("geoNetwork.country","totals.transactionRevenue")]%>%
   group_by(geoNetwork.country)%>%
-  summarize(total_country=sum(totals.transactions,na.rm = T),
-            av_country=sum(totals.transactions,na.rm = T),
-            pr_country=length(totals.transactions[totals.transactions>0&!is.na(totals.transactions)])/length(totals.transactions))
+  summarize(total_country=sum(totals.transactionRevenue,na.rm = T),
+            av_country=sum(totals.transactionRevenue,na.rm = T),
+            pr_country=length(totals.transactionRevenue[totals.transactionRevenue>0&!is.na(totals.transactionRevenue)])/length(totals.transactionRevenue))
 
-
-# I will get the time zones only for countries where purchaces were made in the training dataset 
-# this is to reduce time and stay in the limit of the possible requests from dsk "Data Science Toolki"
 
 # the countries with some revenue: 
 countries_list<-by_Land$geoNetwork.country[by_Land$pr_country>0]
@@ -76,72 +95,65 @@ many_tz<-c("Antarctica",           "Australia",           "Brazil",           "C
            "South Africa",           "Spain",           "Ukraine",           "United Kingdom",
            "United States")
 
-many_tz<-tolower(many_tz)
-# list of woulds countries with more than one tz 
-# for these countries we add the region fo a more detailed location 
+countries_list<-countries_list[countries_list%in%many_tz]
 
-address<-data.frame(country=tr_te$geoNetwork.country,region=tr_te$geoNetwork.region,city=tr_te$geoNetwork.city)
+# creating the address column: 
+tr_te$address<-tr_te$geoNetwork.country
 
-# remove dublicatedrows 
-address<-unique.data.frame(address)
+tr_te$address[tr_te$address%in%countries_list&!is.na(tr_te$geoNetwork.region)]<-
+  paste(tr_te$geoNetwork.region[tr_te$address%in%countries_list&!is.na(tr_te$geoNetwork.region)],
+        tr_te$address[tr_te$address%in%countries_list&!is.na(tr_te$geoNetwork.region)],
+        sep=", ")
+tr_te$address[tr_te$address%in%countries_list&is.na(tr_te$geoNetwork.region)&!is.na(tr_te$geoNetwork.city)]<-
+  paste(tr_te$geoNetwork.city[tr_te$address%in%countries_list&is.na(tr_te$geoNetwork.region)&!is.na(tr_te$geoNetwork.city)],
+        tr_te$address[tr_te$address%in%countries_list&is.na(tr_te$geoNetwork.region)&!is.na(tr_te$geoNetwork.city)],
+        sep=", ")
 
-# no need to bother with tz if no revenew is recorded for a specific country 
+address<-data.frame(address=unique(tr_te$address[!is.na(tr_te$address)]))
 
-address<-address[address$country%in%countries_list,]
-address$country<-as.character(address$country)
-address$region<-as.character(address$region)
-address$city<-as.character(address$city)
-#address$region[is.na(address$region)]<-""
-#address$city[is.na(address$city)]<-""
-
-address$address<-address$country
-
-address$address[!is.na(address$region)&tolower(address$country)%in%many_tz]<-
-  paste(address$region[!is.na(address$region)&tolower(address$country)%in%many_tz],
-        address$address[!is.na(address$region)&tolower(address$country)%in%many_tz],sep=", ")
-address$address[!is.na(address$city)&tolower(address$country)%in%many_tz]<-
-  paste(address$city[!is.na(address$city)&tolower(address$country)%in%many_tz],
-        address$address[!is.na(address$city)&tolower(address$country)%in%many_tz],sep=", ")
-
-Locations<-geocode(address$address, output = c("latlon"), source = c("dsk"))
-address<-cbind.data.frame(address,Locations)
-
-## add tz 
-
-cat("adding local time /n")
+Locations<-geocode(as.character(address$address), output = c("latlon"), source = c("dsk"))
+Locations<-cbind.data.frame(Locations,address)
+# only onle location failed ... it is added manualy 
+Locations$lon[Locations$address=="Turks & Caicos Islands"]<--71.793856
+Locations$lat[Locations$address=="Turks & Caicos Islands"]<-21.809103 
 
 
-address$tz<-tz_lookup_coords(lat =address$lat ,lon = address$lon, method = "fast")
+#
 
-tr_te<-left_join(tr_te,address,
-                 by=c("geoNetwork.country"="country","geoNetwork.region"="region","geoNetwork.city"="city"))
+Locations$tz<-tz_lookup_coords(lat =Locations$lat ,lon = Locations$lon, method = "fast")
+
+address2<-unique.data.frame(left_join(address,Locations,by="address"))
+address2<-left_join(address,Locations,by="address")
+
+tr_te<-left_join(tr_te,Locations,
+                 by=c("address"))
+
+
 
 
 #tr_te$visitStartTime<-as.numeric(tr_te$visitStartTime)
 tr_te$GMT_time<-as.POSIXct(tr_te$visitStartTime,origin = as.POSIXct("1970-01-01"),tz = "UCT")
 tr_te$Local_time<-as.POSIXlt(tr_te$visitStartTime,origin = as.POSIXct("1970-01-01"),tz ="UCT")
 
-
+cat("adding local time /n")
 
 i<-levels(as.factor(tr_te$tz))[1]
 for (i in levels(as.factor(tr_te$tz))) {
   tr_te$Local_time[tr_te$tz%in%i]<-as.POSIXlt(tr_te$visitStartTime[tr_te$tz%in%i],
-                                                          origin = as.POSIXct("1970-01-01"),tz =i)
+                                              origin = as.POSIXct("1970-01-01"),tz =i)
   tr_te$GMT_time[tr_te$tz%in%i]<-as.POSIXct(tr_te$visitStartTime[tr_te$tz%in%i],
-                                                        origin = as.POSIXct("1970-01-01"),tz ="UTC")
+                                            origin = as.POSIXct("1970-01-01"),tz ="UTC")
   print(i)
 }
 
 # out of local time:
-
+tr_te$year<-strftime(tr_te$Local_time, format = "%Y")
 tr_te$month<-month(tr_te$Local_time)
 tr_te$dow<-wday(label = TRUE,tr_te$Local_time)
 tr_te$dom<-mday(tr_te$Local_time)
 tr_te$week<-strftime(tr_te$Local_time, format = "%V")
 tr_te$Hour<-hour(tr_te$Local_time)
 tr_te$AM_PM<-strftime(tr_te$Local_time, format = "%p")
-
-
 
 # weekdays ----------------------------------------------------------------
 cat("extracting weekdays /n")
@@ -174,7 +186,9 @@ tr_te$weekend[!(as.character(tr_te$geoNetwork.country)%in%c(V1,V2,V3,V4))&(as.ch
 
 
 
-#### get the time spent between previous session and current session 
+#### get the time spent between previous session and current session ----------
+
+
 
 cat("extracting lag and lead time per user and visit /n")
 cat("This will take some time depending how arge your dataset is  /n")
@@ -202,10 +216,12 @@ tr_te$leadt1<-df1$leadt1
 tr_te$leadt2<-df1$leadt2
 
 
-# spltit again into training and testing 
+# write csv ---------------------------------------------------------------
 
-train<-cbind(train,tr_te[tr_i,11:23])
-train<-cbind(train,tr_te[-tr_i,11:23])
+
+# spltit again into training and testing 
+train<-cbind(train,tr_te[tr_i,9:23])
+test<-cbind(test,tr_te[-tr_i,9:23])
 
 cat("vreating csv output /n")
 
@@ -213,8 +229,6 @@ cat("vreating csv output /n")
 getwd()
 
 write_csv(x = train,path = "./data/train_Localfeatures.csv")
-write_csv(x = test,path = "./data/test_localfeatures.csv")
+write_csv(x = test,path = "./data/test_Localfeatures.csv")
 #
 cat("Done =)  /n")
-
-
