@@ -50,11 +50,19 @@ def replace_strings_integer(df_train, df_test):
     df_test_decoded= df_test
     for col_i in df_train.columns[df_train.dtypes == 'object']:
             
+        encoding = df_total.groupby([col_i]).size()
+        encoding /=len(df_total)
+        df_total[col_i+'_freq'] = df_total[col_i].map(encoding)
         df_total[col_i] = df_total[col_i].factorize()[0]
+        
         df_train_decoded[col_i] = df_total.loc[range(df_train.shape[0]),col_i].values
+        df_train_decoded[col_i +'_freq'] = df_total.loc[range(df_train.shape[0]),col_i +'_freq'].values
         df_test_decoded[col_i] =  df_total.loc[range(df_train.shape[0],
                                                      df_train.shape[0]+df_test.shape[0]),
                                                col_i].values
+        df_test_decoded[col_i +'_freq'] =  df_total.loc[range(df_train.shape[0],
+                                                     df_train.shape[0]+df_test.shape[0]),
+                                               col_i +'_freq'].values
     return df_train_decoded, df_test_decoded, df_total
 
 df_train, df_test, df_total = replace_strings_integer(df_train, df_test)
