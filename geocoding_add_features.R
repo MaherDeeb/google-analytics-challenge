@@ -25,6 +25,7 @@ rm(new.packages,list.of.packages)
 cat("Libraries installed and loaded /n")
 # get the data  -----------------------------------------------------------
 cat("getting data /n")
+T1<-Sys.time()
 
 #getwd()
 #setwd("C:/kaggle/V2/google-analytics-challenge")
@@ -33,14 +34,13 @@ cat("checking work directory... /n")
 ifelse(("train_feature_engineering.csv"%in%list.files("./data"))&("test_feature_engineering.csv"%in%list.files("./data")),
        m<-1,
        m<-0)
-       
 if(m==0){
   
   stop("edit line 44 in this R script:
        Remove #, and adjust the path according to yours 
        it should look somehow similar to the one suggested inside the script")
 }
- 
+
 #setwd("C:/kaggle/V2/google-analytics-challenge")
 
 
@@ -231,4 +231,7 @@ getwd()
 write_csv(x = train,path = "./data/train_Localfeatures.csv")
 write_csv(x = test,path = "./data/test_Localfeatures.csv")
 #
-cat("Done =)  /n")
+cat("Done =)  
+    ")
+cat("Started:  ",as.character(T1))
+cat("Ended:   ", as.character(Sys.time()))
