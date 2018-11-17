@@ -220,8 +220,8 @@ tr_te$leadt2<-df1$leadt2
 
 
 # spltit again into training and testing 
-train<-cbind(train,tr_te[tr_i,9:23])
-test<-cbind(test,tr_te[-tr_i,9:23])
+train<-cbind(train,tr_te[tr_i,9:24])
+test<-cbind(test,tr_te[-tr_i,9:24])
 
 cat("vreating csv output /n")
 
