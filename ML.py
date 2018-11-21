@@ -114,7 +114,7 @@ x_test_map=map_features_test(np.array(df_test), com_x_f)
 #df_test = (df_test - np.mean(x_train))/np.std(x_train)
 
 lgb_params = {"objective" : "regression", "metric" : "root_mean_squared_error",
-              "num_leaves" : 11, "learning_rate" : 0.01, 
+              "num_leaves" : 9, "learning_rate" : 0.01, 
               "bagging_fraction" : 0.99, "feature_fraction" : 0.99, "bagging_frequency" : 9,
               'max_bin': 255, 'max_depth': -1,'boosting': 'dart','num_rounds': 900,'min_data_in_leaf': 30}
 
