@@ -15,7 +15,16 @@ data_path = './data/'
 df_train = pd.read_csv('{}train_Localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 df_test = pd.read_csv('{}test_localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 
+columns_to_delete = ['date','visitId','visitStartTime',
+                     'trafficSource.adContent',
+                     'trafficSource.campaign',
+                     'trafficSource.keyword',
+                     'trafficSource.referralPath',
+                     'trafficSource.adwordsClickInfo.gclId']
 
+for column in columns_to_delete:
+    df_train = df_train.drop([column],axis = 1)
+    df_test = df_test.drop([column],axis = 1)    
 
 Y_train = df_train['totals.transactionRevenue']
 Y_test = df_test['totals.transactionRevenue']
@@ -45,7 +54,7 @@ df_test = df_test.drop(['fullVisitorId'],axis = 1)
     
 def replace_strings_integer(df_train, df_test):
     df_total = pd.concat([df_train,df_test],sort=False)
-    df_total.index=range(len(df_total['date']))
+    df_total.index=range(len(df_total['channelGrouping']))
     df_train_decoded = df_train
     df_test_decoded= df_test
     for col_i in df_train.columns[df_train.dtypes == 'object']:
