@@ -15,7 +15,7 @@ data_path = './data/'
 df_train = pd.read_csv('{}train_Localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 df_test = pd.read_csv('{}test_localfeatures.csv'.format(data_path), engine='python',dtype={'fullVisitorId': 'object'})
 
-columns_to_delete = ['date','visitId','visitStartTime',
+columns_to_delete = ['visitId','visitStartTime',
                      'trafficSource.adContent',
                      'trafficSource.campaign',
                      'trafficSource.keyword',
@@ -29,8 +29,6 @@ for column in columns_to_delete:
 Y_train = df_train['totals.transactionRevenue']
 Y_test = df_test['totals.transactionRevenue']
 
-df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
-df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
 
 Y_train = Y_train.fillna(0).astype('int64')
 Y_test = Y_test.fillna(0).astype('int64')
@@ -38,8 +36,14 @@ Y_test = Y_test.fillna(0).astype('int64')
 Y_total = pd.concat([Y_train,Y_test],sort=False)
 
 fullVisitorId_test = df_test.fullVisitorId
-df_train = df_train.drop(['fullVisitorId'],axis = 1)
-df_test = df_test.drop(['fullVisitorId'],axis = 1)
+
+drop_columns = 0
+if drop_columns == 1:
+    df_train = df_train.drop(['totals.transactionRevenue'],axis = 1)
+    df_test = df_test.drop(['totals.transactionRevenue'],axis = 1)
+    
+    df_train = df_train.drop(['fullVisitorId'],axis = 1)
+    df_test = df_test.drop(['fullVisitorId'],axis = 1)
     
 # =============================================================================
 # except:
@@ -58,23 +62,33 @@ def replace_strings_integer(df_train, df_test):
     df_train_decoded = df_train
     df_test_decoded= df_test
     for col_i in df_train.columns[df_train.dtypes == 'object']:
+        if col_i != 'fullVisitorId':
+            encoding = df_total.groupby([col_i]).size()
+            encoding /=len(df_total)
+            df_total[col_i+'_freq'] = df_total[col_i].map(encoding)
+            df_total[col_i] = df_total[col_i].factorize()[0]
             
-        encoding = df_total.groupby([col_i]).size()
-        encoding /=len(df_total)
-        df_total[col_i+'_freq'] = df_total[col_i].map(encoding)
-        df_total[col_i] = df_total[col_i].factorize()[0]
-        
-        df_train_decoded[col_i] = df_total.loc[range(df_train.shape[0]),col_i].values
-        df_train_decoded[col_i +'_freq'] = df_total.loc[range(df_train.shape[0]),col_i +'_freq'].values
-        df_test_decoded[col_i] =  df_total.loc[range(df_train.shape[0],
-                                                     df_train.shape[0]+df_test.shape[0]),
-                                               col_i].values
-        df_test_decoded[col_i +'_freq'] =  df_total.loc[range(df_train.shape[0],
-                                                     df_train.shape[0]+df_test.shape[0]),
-                                               col_i +'_freq'].values
+            df_train_decoded[col_i] = df_total.loc[range(df_train.shape[0]),col_i].values
+            df_train_decoded[col_i +'_freq'] = df_total.loc[range(df_train.shape[0]),col_i +'_freq'].values
+            df_test_decoded[col_i] =  df_total.loc[range(df_train.shape[0],
+                                                         df_train.shape[0]+df_test.shape[0]),
+                                                   col_i].values
+            df_test_decoded[col_i +'_freq'] =  df_total.loc[range(df_train.shape[0],
+                                                         df_train.shape[0]+df_test.shape[0]),
+                                                   col_i +'_freq'].values
     return df_train_decoded, df_test_decoded, df_total
 
 df_train, df_test, df_total = replace_strings_integer(df_train, df_test)
+df_train = df_train.fillna(0)
+df_test = df_test.fillna(0)
+df_train['totals.transactionRevenue']=np.log1p(df_train['totals.transactionRevenue'])
+df_test['totals.transactionRevenue']=np.log1p(df_test['totals.transactionRevenue'])
+df_train['totals.totalTransactionRevenue']=np.log1p(df_train['totals.totalTransactionRevenue'])
+df_test['totals.totalTransactionRevenue']=np.log1p(df_test['totals.totalTransactionRevenue'])
+
+df_train.to_csv('{}train_ready_to_process.csv'.format(data_path),index = False)
+df_test.to_csv('{}test_ready_to_process.csv'.format(data_path),index = False)
+
 Y_train_b = (Y_train > 0)*1
 
 def map_features(X, map_degree,maped_fea):
