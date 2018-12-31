@@ -72,3 +72,33 @@ def apply_separation(dataframe_original):
         dataframe_original = dataframe_original.drop(column_name, axis=1)
 
     return dataframe_original
+
+
+def drop_unnecessary_columns(dataframe):
+    """
+    This function drops the columns that their values doesn't change
+    :param dataframe: pandas data frame after flatting the columns that have json structure in the dataset
+    :return: the dataframe after dropping the columns that should be dropped
+    """
+    const_cols_train = [c for c in dataframe.columns if dataframe[c].nunique(dropna=False) == 1]
+    print("The following columns will be dropped because their values doesn't change in all rows:")
+    print(const_cols_train)
+    # Drop the columns with constant values
+    dataframe = dataframe.drop(const_cols_train, axis=1, inplace=False)
+
+    return dataframe
+
+
+def one_hot_code(dataframe, column):
+    """
+    This function add columns that contain the one hot coding (ohc) of the categories in the columns which their names
+    are given in the 'column' list
+    :param dataframe: pandas dataframe. It can be the training or testing dataset
+    :param column: list of strings. It contains the columns names that have categorical data
+    :return: pandas dataframe that is a combination of both the original and the ohc columns
+    """
+    dataframe_ohc = pd.get_dummies(dataframe[column])
+    dataframe_ohc.columns = ['_'.join((column, str(x))) for x in range(len(dataframe_ohc.columns))]
+    dataframe = pd.concat([dataframe, dataframe_ohc], axis=1)
+
+    return dataframe

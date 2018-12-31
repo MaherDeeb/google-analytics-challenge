@@ -1,7 +1,7 @@
 # Google Analytics Customer Revenue Prediction challenge:
 
 ## Submission to Kaggle
-the scirpt inside submission.py prepares the finial submission csv file that you can load directly to Kaggle by clicking 'Submit Prediction' in the competition websiet
+the script inside submission.py prepares the finial submission csv file that you can load directly to Kaggle by clicking 'Submit Prediction' in the competition websiet
 
 ### Requirements:
 python 3.6.2  <br />
