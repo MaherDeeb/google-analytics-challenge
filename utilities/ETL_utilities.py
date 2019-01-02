@@ -1,7 +1,8 @@
 import pandas as pd
 import json
 from utilities import general_utilities
-
+from datetime import datetime
+import re
 
 def separate_json(series: pd.Series) -> pd.DataFrame():
     """
@@ -101,4 +102,101 @@ def one_hot_code(dataframe, column):
     dataframe_ohc.columns = ['_'.join((column, str(x))) for x in range(len(dataframe_ohc.columns))]
     dataframe = pd.concat([dataframe, dataframe_ohc], axis=1)
 
+    return dataframe
+
+
+def create_new_features(dataframe):
+    """
+    This function creates new features from the current data
+    :param dataframe: the pandas dataframe before extracting the new features
+    :return: a dataframe that contains the original columns and the new columns after creating the features.
+    """
+    general_utilities.what_does_the_code_do_now(answer="create new feature from dates")
+    # to know how many columns will be added we calculate current_columns_number
+    current_columns_number = len(list(dataframe.columns))
+    dataframe['month'] = dataframe['date'].map(lambda x: str(x)[4:6])
+    dataframe['day'] = dataframe['date'].map(lambda x: str(x)[6:8])
+    dataframe['dayname'] = dataframe['date'].map(lambda x: datetime.strptime(str(x), '%Y%m%d').strftime('%A'))
+    dataframe['weekday'] = ((dataframe['dayname'] == 'Saturday') | (dataframe['dayname'] == 'Sunday')) * 1
+    dataframe['start_hour'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%H'))
+    dataframe['start_min'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%M'))
+    dataframe['start_sec'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%S'))
+    dataframe['start_am_pm'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%p'))
+    dataframe['daynr'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%j'))
+    dataframe['weeknr'] = dataframe['visitStartTime'].map(lambda x: datetime.fromtimestamp(x).strftime('%U'))
+    print("there are {} new columns added".format(len(list(dataframe.columns))-current_columns_number))
+    # to know how many columns will be added we calculate current_columns_number
+    current_columns_number = len(list(dataframe.columns))
+    general_utilities.what_does_the_code_do_now(answer="create new feature using data binning")
+    dataframe['visitNumber_10'] = (dataframe.visitNumber <= 10) * 1
+    dataframe['visitNumber_50'] = ((dataframe.visitNumber <= 50) & (dataframe.visitNumber > 10)) * 1
+    dataframe['visitNumber_100'] = ((dataframe.visitNumber <= 100) & (dataframe.visitNumber > 50)) * 1
+    dataframe['visitNumber_150'] = ((dataframe.visitNumber <= 150) & (dataframe.visitNumber > 100)) * 1
+    dataframe['visitNumber_200'] = ((dataframe.visitNumber <= 200) & (dataframe.visitNumber > 150)) * 1
+    dataframe['visitNumber_250'] = ((dataframe.visitNumber <= 250) & (dataframe.visitNumber > 200)) * 1
+    dataframe['visitNumber_300'] = (dataframe.visitNumber > 250) * 1
+    dataframe['totals.hits_10'] = (dataframe['totals.hits'] <= 10) * 1
+    dataframe['totals.hits_50'] = ((dataframe['totals.hits'] <= 50) & (dataframe['totals.hits'] > 10)) * 1
+    dataframe['totals.hits_100'] = ((dataframe['totals.hits'] <= 100) & (dataframe['totals.hits'] > 50)) * 1
+    dataframe['totals.hits_150'] = ((dataframe['totals.hits'] <= 150) & (dataframe['totals.hits'] > 100)) * 1
+    dataframe['totals.hits_200'] = ((dataframe['totals.hits'] <= 200) & (dataframe['totals.hits'] > 150)) * 1
+    dataframe['totals.hits_250'] = ((dataframe['totals.hits'] <= 250) & (dataframe['totals.hits'] > 200)) * 1
+    dataframe['totals.hits_300'] = (dataframe['totals.hits'] > 250) * 1
+    dataframe['totals.pageviews_10'] = (dataframe['totals.pageviews'] <= 10) * 1
+    dataframe['totals.pageviews_50'] = ((dataframe['totals.pageviews'] <= 50) & (
+                dataframe['totals.pageviews'] > 10)) * 1
+    dataframe['totals.pageviews_100'] = ((dataframe['totals.pageviews'] <= 100) & (
+                dataframe['totals.pageviews'] > 50)) * 1
+    dataframe['totals.pageviews_150'] = ((dataframe['totals.pageviews'] <= 150) & (
+                dataframe['totals.pageviews'] > 100)) * 1
+    dataframe['totals.pageviews_200'] = ((dataframe['totals.pageviews'] <= 200) & (
+                dataframe['totals.pageviews'] > 150)) * 1
+    dataframe['totals.pageviews_250'] = ((dataframe['totals.pageviews'] <= 250) & (
+                dataframe['totals.pageviews'] > 200)) * 1
+    dataframe['totals.pageviews_300'] = (dataframe['totals.pageviews'] > 250) * 1
+    print("there are {} new columns added".format(len(list(dataframe.columns)) - current_columns_number))
+    # to know how many columns will be added we calculate current_columns_number
+    current_columns_number = len(list(dataframe.columns))
+    general_utilities.what_does_the_code_do_now(answer="create new feature regular expressions")
+    dataframe['Chrome'] = (dataframe['device.browser'] == 'Chrome') * 1
+    dataframe['Safari'] = ((dataframe['device.browser'] == 'Safari') |
+                           (dataframe['device.browser'] == 'Safari (in-app)')) * 1
+    dataframe['Firefox'] = (dataframe['device.browser'] == 'Firefox') * 1
+    dataframe['Internet Explorer'] = (dataframe['device.browser'] == 'Internet Explorer') * 1
+    dataframe['Android'] = ((dataframe['device.browser'] == 'Android Webview') | (
+            dataframe['device.browser'] == 'Android device.browser') |
+                            (dataframe['device.browser'] == 'Samsung Internet')) * 1
+    dataframe['Edge'] = (dataframe['device.browser'] == 'Edge') * 1
+    dataframe['Windows'] = ((dataframe['device.operatingSystem'] == 'Windows') | (
+            dataframe['device.operatingSystem'] == 'Windows Phone')) * 1
+    dataframe['Macintosh'] = ((dataframe['device.operatingSystem'] == 'Macintosh') |
+                              (dataframe['device.operatingSystem'] == 'iOS')) * 1
+    dataframe['Android'] = ((dataframe['device.operatingSystem'] == 'Android') |
+                            (dataframe['device.operatingSystem'] == 'Chrome OS')) * 1
+    dataframe['Linux'] = (dataframe['device.operatingSystem'] == 'Linux') * 1
+    dataframe['geoNetwork.city_none'] = ((dataframe['geoNetwork.city'] == 'not available in demo dataset') | (
+            dataframe['geoNetwork.city'] == '(not set)')) * 1
+    dataframe['geoNetwork.metro_none'] = ((dataframe['geoNetwork.metro'] == 'not available in demo dataset') | (
+            dataframe['geoNetwork.metro'] == '(not set)')) * 1
+    dataframe['geoNetwork.networkDomain_start'] = dataframe[
+        'geoNetwork.networkDomain'].map(lambda x: str(x).split('.')[0])
+    dataframe['geoNetwork.networkDomain_end'] = dataframe['geoNetwork.networkDomain'].map(
+        lambda x: str(x).split('.')[1] if len([str(x).split('.'), 'other']) > 2 else None)
+    dataframe['geoNetwork.networkDomain_end_end'] = dataframe['geoNetwork.networkDomain'].map(
+        lambda x: str(x).split('.')[2] if len([str(x).split('.'), 'other']) > 3 else None)
+    dataframe['trafficSource.adContent_na'] = (dataframe['trafficSource.adContent'].isnull()) * 1
+    dataframe['trafficSource.adContent_google'] = (dataframe['trafficSource.adContent'].str.contains('Google')) * 1
+    dataframe['gcdID_5_last'] = dataframe['trafficSource.adwordsClickInfo.gclId'].map(
+        lambda x: str(x)[-5:-1] if len(str(x)) > 3 else None)
+    dataframe['google'] = dataframe['trafficSource.keyword'].map(
+        lambda x: (re.match(r'.*go+gle.*', str(x).lower()) is not None) * 1)
+    dataframe['youtube'] = dataframe['trafficSource.keyword'].map(
+        lambda x: (re.match(r'.*youtube.*', str(x).lower()) is not None) * 1)
+    dataframe['store'] = dataframe['trafficSource.keyword'].map(
+        lambda x: (re.match(r'.*store.*', str(x).lower()) is not None) * 1)
+    dataframe['trafficSource.keywords_notprovided'] = dataframe['trafficSource.keyword'].map(
+        lambda x: (re.match(r'.*(not provided).*', str(x).lower()) is not None) * 1) + (
+                                                   dataframe['trafficSource.keyword'].isnull()) * 1
+    print("there are {} new columns added".format(len(list(dataframe.columns)) - current_columns_number))
+    # to know how many columns will be added we calculate current_columns_number
     return dataframe

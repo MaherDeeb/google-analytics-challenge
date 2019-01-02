@@ -60,4 +60,29 @@ general_utilities.what_does_the_code_do_now(answer="Feature Engineering")
 # those columns contain categorical data.
 columns = ['channelGrouping', 'device.deviceCategory', 'geoNetwork.continent',
            'geoNetwork.subContinent', 'trafficSource.medium']
-# TODO: list the columns that contain categorical data as well but ignored and explain why they are ignored.
+# ignored columns are columns that contain more classes in the test dataset than the train dataset.
+# In this case, after the OHC many columns, which appear in test dataset, will not appear in the train dataset
+ignored_columns = ['device.browser', 'trafficSource.campaign', 'page']
+# applying ohc:
+for column in columns:
+    print("applying ohc on the column {}".format(column))
+    train_dataframe = ETL_utilities.one_hot_code(train_dataframe, column)
+    print("Number of columns in the train dataset after"
+          " applying the ohc on column {} is {}".format(column, len(df_train.columns)))
+    test_dataframe = ETL_utilities.one_hot_code(test_dataframe, column)
+    print("Number of columns in the test dataset after"
+          " applying the ohc on column {} is {}".format(column, len(df_train.columns)))
+print('===================================================')
+print("create new features from the current data in the train dataset")
+df_train = ETL_utilities.create_new_features(train_dataframe)
+print("done")
+print("create new features from the current data in the train dataset")
+df_test = ETL_utilities.create_new_features(test_dataframe)
+print("done")
+general_utilities.what_does_the_code_do_now(answer="Saving the expanded dataframes as csv files")
+print("saving the training dataset under the name train_feature_engineering.csv")
+train_dataframe.to_csv('{}train_feature_engineering.csv'.format(data_path), index=False)
+print("saving the testing dataset under the name test_feature_engineering.csv")
+test_dataframe.to_csv('{}test_feature_engineering.csv'.format(data_path), index=False)
+general_utilities.what_does_the_code_do_now(answer="For more feature, run 'geocoding_add_features.R'")
+input("After running the R script, press Enter to continue ...")
