@@ -2,6 +2,8 @@ import csv
 import sys
 from utilities import general_utilities
 from utilities import ETL_utilities
+from utilities import ML_utilities
+import pandas as pd
 
 # define the path where the data are
 data_path = './data/'
@@ -68,10 +70,10 @@ for column in columns:
     print("applying ohc on the column {}".format(column))
     train_dataframe = ETL_utilities.one_hot_code(train_dataframe, column)
     print("Number of columns in the train dataset after"
-          " applying the ohc on column {} is {}".format(column, len(df_train.columns)))
+          " applying the ohc on column {} is {}".format(column, len(train_dataframe.columns)))
     test_dataframe = ETL_utilities.one_hot_code(test_dataframe, column)
     print("Number of columns in the test dataset after"
-          " applying the ohc on column {} is {}".format(column, len(df_train.columns)))
+          " applying the ohc on column {} is {}".format(column, len(test_dataframe.columns)))
 print('===================================================')
 print("create new features from the current data in the train dataset")
 df_train = ETL_utilities.create_new_features(train_dataframe)
@@ -86,3 +88,29 @@ print("saving the testing dataset under the name test_feature_engineering.csv")
 test_dataframe.to_csv('{}test_feature_engineering.csv'.format(data_path), index=False)
 general_utilities.what_does_the_code_do_now(answer="For more feature, run 'geocoding_add_features.R'")
 input("After running the R script, press Enter to continue ...")
+r_script_run = input("If you want to read the results from R script, press 1. Otherwise, press 0. Then press Enter")
+if r_script_run == 1:
+    print("You choose to load the results of the R script")
+    print("loading the training dataset...train_Localfeatures.csv")
+    train_dataframe = pd.read_csv('{}train_Localfeatures.csv'.format(data_path), engine='python',
+                                  dtype={'fullVisitorId': 'object'})
+    print("done.")
+    print("loading the testing dataset...test_localfeatures.csv")
+    test_dataframe = pd.read_csv('{}test_localfeatures.csv'.format(data_path), engine='python',
+                                 dtype={'fullVisitorId': 'object'})
+    print("done.")
+else:
+    print("You choose NOT to load the results of the R script")
+general_utilities.what_does_the_code_do_now(answer="Applying Machine learning")
+print("defining the regression problem: the target is 'totals.transactionRevenue'")
+print("replacing the missing values of the target with 0s and define the type of the data as 'int64'")
+train_target = train_dataframe['totals.transactionRevenue'].fillna(0).astype('int64')
+test_target = test_dataframe['totals.transactionRevenue'].fillna(0).astype('int64')
+general_utilities.what_does_the_code_do_now(answer="Decoding strings with integers")
+train_dataframe, test_dataframe, total_dataframe = ML_utilities.decode_strings_with_integers(
+    train_dataframe, test_dataframe)
+general_utilities.what_does_the_code_do_now(answer="Decoding strings based on occurrence frequency")
+train_dataframe, test_dataframe, total_dataframe = ML_utilities.decode_strings_with_appearance_frequency(
+    train_dataframe, test_dataframe)
+
+
