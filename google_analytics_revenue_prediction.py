@@ -102,15 +102,11 @@ if r_script_run == 1:
 else:
     print("You choose NOT to load the results of the R script")
 general_utilities.what_does_the_code_do_now(answer="Applying Machine learning")
-print("defining the regression problem: the target is 'totals.transactionRevenue'")
-print("replacing the missing values of the target with 0s and define the type of the data as 'int64'")
-train_target = train_dataframe['totals.transactionRevenue'].fillna(0).astype('int64')
-test_target = test_dataframe['totals.transactionRevenue'].fillna(0).astype('int64')
+train_dataframe, test_dataframe, train_target, test_target = ML_utilities.target_preparation(
+    train_dataframe, test_dataframe)
 general_utilities.what_does_the_code_do_now(answer="Decoding strings with integers")
-train_dataframe, test_dataframe, total_dataframe = ML_utilities.decode_strings_with_integers(
+train_dataframe, test_dataframe, _ = ML_utilities.decode_strings_with_integers(
     train_dataframe, test_dataframe)
 general_utilities.what_does_the_code_do_now(answer="Decoding strings based on occurrence frequency")
-train_dataframe, test_dataframe, total_dataframe = ML_utilities.decode_strings_with_appearance_frequency(
+train_dataframe, test_dataframe, _ = ML_utilities.decode_strings_with_appearance_frequency(
     train_dataframe, test_dataframe)
-
-
