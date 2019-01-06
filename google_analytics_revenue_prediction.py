@@ -4,6 +4,7 @@ from utilities import general_utilities
 from utilities import ETL_utilities
 from utilities import ML_utilities
 import pandas as pd
+import numpy as np
 
 # define the path where the data are
 data_path = './data/'
@@ -110,3 +111,26 @@ train_dataframe, test_dataframe, _ = ML_utilities.decode_strings_with_integers(
 general_utilities.what_does_the_code_do_now(answer="Decoding strings based on occurrence frequency")
 train_dataframe, test_dataframe, _ = ML_utilities.decode_strings_with_appearance_frequency(
     train_dataframe, test_dataframe)
+general_utilities.what_does_the_code_do_now(answer="Splitting data to train and valid datasets")
+x_train, x_valid, y_train, y_valid = ML_utilities.split_data(
+    train_dataframe, train_target, valid_size=0.1, random_state=0)
+general_utilities.what_does_the_code_do_now(answer="Applying features mapping")
+map_degree = 0
+terms_mix_degree = 2
+features_numbers_list = []
+# if features_numbers_list = [], all features are considered
+print("applying features mapping on the training dataset --> map_degree = {}, terms_mix_degree = {},"
+      " features_numbers_list = {}".format(map_degree, terms_mix_degree, features_numbers_list))
+x_train, _ = ML_utilities.features_mapping(x_train, map_degree=map_degree, terms_mix_degree=terms_mix_degree,
+                                           features_numbers_list=features_numbers_list)
+print("applying features mapping on validating dataset --> map_degree = {}, terms_mix_degree = {},"
+      " features_numbers_list = {}".format(map_degree, terms_mix_degree, features_numbers_list))
+x_valid, _ = ML_utilities.features_mapping(x_valid, map_degree=map_degree, terms_mix_degree=terms_mix_degree,
+                                           features_numbers_list=features_numbers_list)
+print("applying features mapping on the testing dataset --> map_degree = {}, terms_mix_degree = {},"
+      " features_numbers_list = {}".format(map_degree, terms_mix_degree, features_numbers_list))
+x_test, _ = ML_utilities.features_mapping(test_dataframe.values,
+                                          map_degree=map_degree, terms_mix_degree=terms_mix_degree,
+                                          features_numbers_list=features_numbers_list)
+general_utilities.what_does_the_code_do_now(answer="adding the bias to the datasets as series of ones")
+

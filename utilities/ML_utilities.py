@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import itertools as it
+from sklearn.model_selection import train_test_split
 
 
 def target_preparation(train_dataframe, test_dataframe):
@@ -73,15 +74,31 @@ def decode_strings_with_appearance_frequency(train_dataframe, test_dataframe):
     return train_decoded_dataframe, test_decoded_dataframe
 
 
-def train_features_mapping(x_train, map_degree=2, terms_mix_degree=2, y_train=[], minimum_correlation = 0.05,
-                           features_numbers_list=[]):
+def split_data(train_dataframe, train_target, valid_size=0.1, random_state=0):
+    """
+    this function splits the training dataset to two datasets. The first dataset is for training the model and the
+     second is for validating the model. The splitting taking into account the non zero values of the target
+    :param train_dataframe: pandas dataframe that contains the training data without the target
+    :param train_target: a series that contains the target value
+    :param valid_size: a number in a range ]0,1[.
+    :param random_state: a seed value to reproduce the result
+    :return: the the train and valid arrays
+    """
+    train_target_non_zero = (train_target > 0) * 1
+    x_train, x_valid, y_train, y_valid = train_test_split(
+        train_dataframe, np.array(train_target),
+        test_size=valid_size, stratify=train_target_non_zero, random_state=random_state)
+    return np.array(x_train), np.array(x_valid), np.array(y_train), np.array(y_valid)
+
+
+def features_mapping(numpy_array, map_degree=2, terms_mix_degree=2, features_numbers_list=[]):
     """
     this function introduces the possible nonlinearity and dependency between the independent features. For example
     if we have 2 features x1 and x2, after applying the function, we get the following features if the map_degree = 2
     x1, x2, x1^2, x2^2, x1*x2
     it is important to apply the map_features_test function after applying this function to be sure that the test data
     are mapped exactly as the train datasets
-    :param x_train: numpy arrary with size (nxm) where n is the number of rows and m is the number of the features
+    :param numpy_array: numpy arrary with size (nxm) where n is the number of rows and m is the number of the features
     :param map_degree: the nonlinearty degree. For example map_degree = 2 --> x and x^2 will be considered. If
      map_degree = 3 --> x, x^2 and x^3 will be considered. If 0 is passed, this type of nonlinearity will be not
      considered
@@ -89,54 +106,44 @@ def train_features_mapping(x_train, map_degree=2, terms_mix_degree=2, y_train=[]
     For example, if mix_degree = 2 --> x1, x2, x3, x1*x2 x1*x3 and x2*x3 will be considered.
      If mix_degree = 3 -> x1, x2, x3, x1*x2 x1*x3, x2*x3, x1*x2*x3. If 0 is passed, this type of nonlinearty will not
      be considered
-    :param y_train: numpy array with size (nx1). If it is passed, the minimum_correlation has to be passed. In this
-     case the correlation between the new created term (e.g. x^2 or x1*x2) and the target y_train will be calculated.
-      If the calculated correlation is less than the minimum_correlation, the new term will be ignored.
-       Otherwise it will be considered and will be added to the x_train at the end
-    :param minimum_correlation: a number between 0 and 1 which is the threshold where the new calculated terms will be
-    important considered or they will be ignored.
     :param features_numbers_list: list of integers that represents the features that should be considered by applying
     this function. if not passed, all features will be considered. For example, if there is 3 features x1, x2, x3 which
-     has the following order indexes [0, 1, 2] in x_train, and features_numbers_list = [1, 2] are passed, then only
-     x2 and x3 (x_train[:,1], x_train[:,2]) will be considered when applying the function.
-    :return:
+     has the following order indexes [0, 1, 2] in dataframe, and features_numbers_list = [1, 2] are passed, then only
+     x2 and x3 (dataframe[:,1], dataframe[:,2]) will be considered when applying the function.
+    :return: numpy array contain the original features and the new created terms.
+    the terms from the second nonlinearty type (i.e. x1*x2, x1*x3,... etc)
     """
     # consider only the required features when applying the function
     if len(features_numbers_list) == 0:
-        features_numbers_list = list(range(x_train.shape[1]))
-    # initiate the correlation between the new term and the target y_train
-    if len(y_train) > 0:
-        correlation_term_i_y_train = pd.DataFrame(y_train)
-        print(correlation_term_i_y_train.size)
+        features_numbers_list = list(range(numpy_array.shape[1]))
     # initiate the list that contains the shapes which used to combine the features e.g. x1*x2
     terms_shape_list = []
+    # applying the first nonlinearty which means x**degree e.g. x**2, x**3 and so on.
     if map_degree > 1:
-        for degree_i in range(2, map_degree+1):
-            x_train = np.concatenate((x_train, x_train[:, features_numbers_list]**degree_i), axis=1)
-
+        for degree_i in range(2, map_degree + 1):
+            # appending the features to the original array
+            numpy_array = np.concatenate((numpy_array, numpy_array[:, features_numbers_list] ** degree_i), axis=1)
+    # apply the second nonlinearty type which means introducing the dependency relationship like x1*x2
     if terms_mix_degree > 1:
-        for i in range(2, terms_mix_degree + 1):
+        for mix_degree_i in range(2, terms_mix_degree + 1):
             if map_degree > 1:
+                # in this case we don't miss terms like x2*x1**2 (x2*x1^2)
                 mapping_shape = list(it.combinations_with_replacement(range(features_numbers_list[0],
-                                                                    features_numbers_list[-1]+1), i))
+                                                                            features_numbers_list[-1] + 1),
+                                                                      mix_degree_i))
             else:
-                mapping_shape = list(it.combinations(range(features_numbers_list[0], features_numbers_list[-1] + 1), i))
-            print(mapping_shape)
-            # initiate the term that should be calculated
+                # we don't include the first type of nonlinearty like x1**2 (x1^2)
+                mapping_shape = list(
+                    it.combinations(range(features_numbers_list[0], features_numbers_list[-1] + 1), mix_degree_i))
             for mapping_shape_i in mapping_shape:
                 if len(set(mapping_shape_i)) > 1:
-                    term_i = np.ones((len(x_train), 1))
+                    # initiate the term that should be calculated
+                    term_i = np.ones((len(numpy_array), 1))
                     for feature_i in mapping_shape_i:
-                        term_i[:, 0] = np.multiply(term_i[:, 0], x_train[:, feature_i])
-                    x_train = np.append(x_train.T, term_i.reshape(1, -1), axis=0).T
+                        # x1*x2*x3...
+                        term_i[:, 0] = np.multiply(term_i[:, 0], numpy_array[:, feature_i])
+                    # appending the features to the original array
+                    numpy_array = np.append(numpy_array.T, term_i.reshape(1, -1), axis=0).T
+                    # store the terms for the investigation
                     terms_shape_list.append(mapping_shape_i)
-    return x_train.shape, terms_shape_list
-
-train_features_mapping(x,2,2,y,0.05)
-
-
-def map_features_test(X, com_x_f):
-    com_x = com_x_f
-    for j in range(len(com_x)):
-        X = np.append(X.T, np.array(X[:, com_x[j][0]] * X[:, com_x[j][1]]).reshape(1, -1), axis=0).T
-    return X
+    return numpy_array, terms_shape_list
