@@ -10,9 +10,8 @@ If you are using Windows add<br />
 `C:\Program Files\R\R-3.5.1\bin`<br />
 to your PATH in the environment variables<br />
 Because of the nested column "hits", the size of the data is about 27 GB. Therefore, we used a machine with enough
- memory size to process the data. In this script we load only 15000 rows. You can change the number of rows that
- should be loaded by changing the variable `rows_amount` in line 29
-
+ memory size to process the data.
+ 
 ## How does it work:
 
 Run the following command:<br />

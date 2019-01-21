@@ -1,27 +1,13 @@
 import csv
 import sys
-from utilities import general_utilities
+
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+
 from utilities import ETL_utilities
 from utilities import ML_utilities
-import pandas as pd
-import numpy as np
-import lightgbm as lgb
-
-# define the path where the data are
-data_path = './data/'
-
-general_utilities.what_does_the_code_do_now(answer="Preparing the environment to work with large csv files")
-maxInt = sys.maxsize
-decrement = True
-while decrement:
-    # decrease the maxInt value by factor 10
-    # as long as the OverflowError occurs.
-    decrement = False
-    try:
-        csv.field_size_limit(maxInt)
-    except OverflowError:
-        maxInt = int(maxInt / 10)
-        decrement = True
+from utilities import general_utilities
 
 
 def run_full_job(rows_amount=None):
@@ -37,10 +23,8 @@ def run_full_job(rows_amount=None):
     try:
         if rows_amount:
             rows_amount = int(rows_amount)
-        print("loading data from the file {}. Only {} rows will be read...".format(file_name, rows_amount))
         train_dataframe = ETL_utilities.load_data(data_path, file_name, rows_amount)
         file_name = "test_v2.csv"
-        print("loading data from the file {}. Only {} rows will be read...".format(file_name, rows_amount))
         test_dataframe = ETL_utilities.load_data(data_path, file_name, rows_amount)
 
     except MemoryError as e:
@@ -48,8 +32,8 @@ def run_full_job(rows_amount=None):
               "data doesn't fit the memory".format(rows_amount))
         return e
     except:
-        print("Unexpected error")
-        return "Unexpected error"
+        print("Unexpected error. We suggest to use bigger machine!!")
+        return
 
     print("flatting the columns that contains nested json structure in the training dataset")
     train_dataframe = ETL_utilities.apply_separation(train_dataframe)
@@ -193,5 +177,20 @@ def run_full_job(rows_amount=None):
 
 
 if __name__ == '__main__':
-    run_full_job(*sys.argv[1:])
+    # define the path where the data are
+    data_path = './data/'
 
+    general_utilities.what_does_the_code_do_now(answer="Preparing the environment to work with large csv files")
+    maxInt = sys.maxsize
+    decrement = True
+    while decrement:
+        # decrease the maxInt value by factor 10
+        # as long as the OverflowError occurs.
+        decrement = False
+        try:
+            csv.field_size_limit(maxInt)
+        except OverflowError:
+            maxInt = int(maxInt / 10)
+            decrement = True
+
+    run_full_job(*sys.argv[1:])
