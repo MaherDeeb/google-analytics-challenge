@@ -25,12 +25,17 @@ def load_data(path, file_name, rows_amount):
     :param rows_amount: (int) this is the amount of the rows that should be read from the csv file to avoid memory error
     :return: pandas dataframe
     """
-    general_utilities.what_does_the_code_do_now(
-        answer="reading {} rows from the file {}".format(rows_amount, file_name))
-    # the column "fullVisitorId" should be explicitly given object type otherwise it will be defined as integer
-    # which cause an error when submitting the results.
-    dataframe = pd.read_csv('{}{}'.format(path, file_name), nrows=rows_amount, engine='python',
-                            dtype={'fullVisitorId': 'object'})
+    if rows_amount:
+        general_utilities.what_does_the_code_do_now(
+            answer="reading {} rows from the file {}".format(rows_amount, file_name))
+        # the column "fullVisitorId" should be explicitly given object type otherwise it will be defined as integer
+        # which cause an error when submitting the results.
+        dataframe = pd.read_csv('{}{}'.format(path, file_name), nrows=rows_amount, engine='python',
+                                dtype={'fullVisitorId': 'object'})
+    else:
+        general_utilities.what_does_the_code_do_now(
+            answer="reading all data from the file {}".format(file_name))
+        dataframe = pd.read_csv('{}{}'.format(path, file_name), engine='python', dtype={'fullVisitorId': 'object'})
     # because the hits columns is too large and nested we drop it for now.
     # If you want to keep it, a memory error can be expected
     dataframe = dataframe.drop('hits', axis=1)
@@ -71,7 +76,9 @@ def apply_separation(dataframe_original):
             answer="include the flatten columns in the original dataframe and drop the old column with json structure")
         dataframe_original = dataframe_original.join(dataframe)
         dataframe_original = dataframe_original.drop(column_name, axis=1)
-
+    # the column 'trafficSource.adwordsClickInfo.targetingCriteria.0' will be dropped because it has invalid values
+    # which raise errors later. The problem can be solved with more investigation.
+    dataframe_original = dataframe_original.drop('trafficSource.adwordsClickInfo.targetingCriteria.0', axis=1)
     return dataframe_original
 
 
@@ -135,6 +142,7 @@ def create_new_features(dataframe):
     dataframe['visitNumber_200'] = ((dataframe.visitNumber <= 200) & (dataframe.visitNumber > 150)) * 1
     dataframe['visitNumber_250'] = ((dataframe.visitNumber <= 250) & (dataframe.visitNumber > 200)) * 1
     dataframe['visitNumber_300'] = (dataframe.visitNumber > 250) * 1
+    dataframe['totals.hits'] = dataframe['totals.hits'].astype('int64')
     dataframe['totals.hits_10'] = (dataframe['totals.hits'] <= 10) * 1
     dataframe['totals.hits_50'] = ((dataframe['totals.hits'] <= 50) & (dataframe['totals.hits'] > 10)) * 1
     dataframe['totals.hits_100'] = ((dataframe['totals.hits'] <= 100) & (dataframe['totals.hits'] > 50)) * 1
@@ -142,6 +150,7 @@ def create_new_features(dataframe):
     dataframe['totals.hits_200'] = ((dataframe['totals.hits'] <= 200) & (dataframe['totals.hits'] > 150)) * 1
     dataframe['totals.hits_250'] = ((dataframe['totals.hits'] <= 250) & (dataframe['totals.hits'] > 200)) * 1
     dataframe['totals.hits_300'] = (dataframe['totals.hits'] > 250) * 1
+    dataframe['totals.pageviews'] = dataframe['totals.pageviews'].fillna(0).astype('int64')
     dataframe['totals.pageviews_10'] = (dataframe['totals.pageviews'] <= 10) * 1
     dataframe['totals.pageviews_50'] = ((dataframe['totals.pageviews'] <= 50) & (
                 dataframe['totals.pageviews'] > 10)) * 1

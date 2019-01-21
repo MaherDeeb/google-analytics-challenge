@@ -26,8 +26,8 @@ def new_features(df):
     df['month'] = df['date'].map(lambda x: str(x)[4:6])
     df['day'] = df['date'].map(lambda x: str(x)[6:8])
     
-    #df['sessionId_r'] = df['sessionId'].map(lambda x: str(x).split('_')[0])
-    #df['sessionId_l'] = df['sessionId'].map(lambda x: str(x).split('_')[1])
+    #df['sessionId_r'] = df['sessionId'].map(lambda index_negative_revenues: str(index_negative_revenues).split('_')[0])
+    #df['sessionId_l'] = df['sessionId'].map(lambda index_negative_revenues: str(index_negative_revenues).split('_')[1])
     
     df['dayname'] = df['date'].map(lambda x: datetime.strptime(str(x), '%Y%m%d').strftime('%A'))
     df['weekday'] = (( df['dayname']=='Saturday') | (df['dayname']=='Sunday'))*1

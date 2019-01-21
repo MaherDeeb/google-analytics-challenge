@@ -20,8 +20,10 @@ def target_preparation(train_dataframe, test_dataframe):
           "('totals.totalTransactionRevenue') since their values are in same range")
     train_target = np.log1p(train_target)
     test_target = np.log1p(test_target)
-    train_dataframe['totals.totalTransactionRevenue'] = np.log1p(train_dataframe['totals.totalTransactionRevenue'])
-    test_dataframe['totals.totalTransactionRevenue'] = np.log1p(test_dataframe['totals.totalTransactionRevenue'])
+    train_dataframe['totals.totalTransactionRevenue'] = np.log1p(train_dataframe['totals.totalTransactionRevenue'].
+                                                                 fillna(0).astype('int64'))
+    test_dataframe['totals.totalTransactionRevenue'] = np.log1p(test_dataframe['totals.totalTransactionRevenue'].
+                                                                fillna(0).astype('int64'))
     print("dropping the target from the train and test datasets")
     train_dataframe = train_dataframe.drop('totals.transactionRevenue', axis=1)
     test_dataframe = test_dataframe.drop('totals.transactionRevenue', axis=1)
@@ -62,16 +64,20 @@ def decode_strings_with_appearance_frequency(train_dataframe, test_dataframe):
     print("Please NOTICE that the column 'fullVisitorId' is considered")
     for column_i in train_dataframe.columns[train_dataframe.dtypes == 'object']:
         print("decoding the column {} based on value appearance frequency".format(column_i))
-        encoding = total_dataframe.groupby([column_i]).size()
-        encoding /= len(total_dataframe)
-        total_dataframe[column_i + '_freq'] = total_dataframe[column_i].map(encoding)
-        train_decoded_dataframe[column_i + '_freq'] = total_dataframe.loc[
-            range(train_dataframe.shape[0]), column_i + '_freq'].values
-        test_decoded_dataframe[column_i + '_freq'] = total_dataframe.loc[
-            range(train_dataframe.shape[0], train_dataframe.shape[0] +
-                  test_dataframe.shape[0]), column_i + '_freq'].values
+        try:
+            encoding = total_dataframe.groupby([column_i]).size()
+            print(encoding)
+            encoding /= len(total_dataframe)
+            total_dataframe[column_i + '_freq'] = total_dataframe[column_i].map(encoding)
+            train_decoded_dataframe[column_i + '_freq'] = total_dataframe.loc[
+                range(train_dataframe.shape[0]), column_i + '_freq'].values
+            test_decoded_dataframe[column_i + '_freq'] = total_dataframe.loc[
+                range(train_dataframe.shape[0], train_dataframe.shape[0] +
+                      test_dataframe.shape[0]), column_i + '_freq'].values
+        except:
+            print("error while decoding {} based on value appearance frequency".format(column_i))
 
-    return train_decoded_dataframe, test_decoded_dataframe
+    return train_decoded_dataframe, test_decoded_dataframe, total_dataframe
 
 
 def split_data(train_dataframe, train_target, valid_size=0.1, random_state=0):
